@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload to Firebase Storage</title>
+</head>
+<body>
+    <h1>Subir un Archivo a Firebase Storage</h1>
+    <input type="file" id="fileInput">
+    <button id="uploadButton">Subir Archivo</button>
+    <p id="uploadStatus"></p>
+
+    <!-- Cargar el SDK de Firebase como módulos ES -->
+    <script type="module">
+        // Importar Firebase App (necesario)
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        
+        // Importar Firebase Storage
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js';
+
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkayKwgPhyYu-HQq4KWFDo4da3JxS3Kks",
+            authDomain: "savesavor-ab9e3.firebaseapp.com",
+            projectId: "savesavor-ab9e3",
+            storageBucket: "savesavor-ab9e3.appspot.com",
+            messagingSenderId: "791640088298",
+            appId: "1:791640088298:web:286439451b297a86684193",
+            measurementId: "G-HV52CZSMPL"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
+        
+        // Selecciona elementos del DOM
+        const fileInput = document.getElementById('fileInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        // Función para subir el archivo
+        uploadButton.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                uploadStatus.textContent = 'Por favor, selecciona un archivo primero.';
+                return;
+            }
+
+            const storageRef = ref(storage, 'images/' + file.name);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    // Progreso de la subida
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    uploadStatus.textContent = 'Subiendo: ' + progress.toFixed(2) + '%';
+                }, 
+                (error) => {
+                    // Manejo de errores
+                    console.error('Error al subir el archivo:', error);
+                    uploadStatus.textContent = 'Error al subir el archivo.';
+                }, 
+                () => {
+                    // Subida completada
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        uploadStatus.textContent = 'Archivo subido con éxito! URL de descarga: ' + downloadURL;
+                        console.log('File available at', downloadURL);
+                    });
+                }
+            );
+        });
+    </script>
+</body>
+</html>
